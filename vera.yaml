@@ -1,0 +1,38 @@
+# Customer Resolution Desk: an enterprise case agent that works with support-bot
+# (docs/demo-resolution-desk.md). A service manager pastes in a customer's case; the desk
+# asks support-bot for the order and, when the customer wants money back, for the refund.
+agent_id: resolution-desk
+display_name: Customer Resolution Desk
+harness: langgraph
+entry: agent:build_graph
+models: [small]
+tools: []
+capabilities: [case.read, case.resolve]
+
+# Agent to agent, through the gateway only. Declaring the callee is what allows the call, and
+# it puts the architecture reviewer on this version's approval.
+calls:
+  - agent: support-bot
+
+# This agent's own guardrails. They tighten the central and tenant rules for this agent only.
+guardrails:
+  denied_terms:
+    - term: attorney
+      action: block
+    - term: lawsuit
+      action: block
+  custom_patterns:
+    - name: account-number            # Acme customer account ids, never needed by the model
+      pattern: '\bACC-\d{6,10}\b'
+      action: redact
+  blocked_message: >-
+    This looks like a legal matter. Please send it to Legal (legal@acme.example) instead
+    of the service desk.
+
+eval:                           # golden cases, run through the gateway at certification
+  - input: "Where is order 42? Customer Priya Nair is asking for an ETA."
+    expect_contains: ["Order 42"]
+  - input: "Customer Marc Dubois says order 17 arrived damaged and wants his money back."
+    expect_contains: ["Order 17"]
+  - input: "hello"
+    expect_contains: ["order number"]

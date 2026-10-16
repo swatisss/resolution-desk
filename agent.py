@@ -52,7 +52,7 @@ def build_graph(gateway: httpx.AsyncClient | None = None, patience_s: float = 30
         base_url=os.environ["VERA_GATEWAY_URL"], timeout=httpx.Timeout(15.0)
     )
     support = SupportDesk(http, patience_s=patience_s)
-    model = VeraChatModel(model="small")
+    model = VeraChatModel(model="claude-haiku-5-5")
 
     async def intake(state: DeskState) -> dict[str, Any]:
         case = parse_case(state["messages"][-1].text)

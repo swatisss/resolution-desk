@@ -1,0 +1,28 @@
+[
+  {
+    "subject": "cust-1042",
+    "key": "profile",
+    "tags": ["profile"],
+    "value": {
+      "name": "Priya Nair",
+      "tier": "Gold",
+      "customer_since": 2021,
+      "preferred_contact": "email",
+      "contact": "priya.nair@example.test",
+      "tone": "formal and warm"
+    }
+  },
+  {
+    "subject": "cust-2077",
+    "key": "profile",
+    "tags": ["profile"],
+    "value": {
+      "name": "Marc Dubois",
+      "tier": "Standard",
+      "customer_since": 2025,
+      "preferred_contact": "phone",
+      "contact": "+33 1 00 00 00 00",
+      "tone": "brief and direct"
+    }
+  }
+]

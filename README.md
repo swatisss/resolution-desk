@@ -8,8 +8,11 @@ approval. A model drafts the reply to the customer; the result is one case note.
 | File | What it is |
 |---|---|
 | `vera.yaml` | the manifest: models, `calls: [support-bot]`, the agent's own guardrails, golden cases |
-| `agent.py` | the LangGraph graph: intake → check order → (request refund) → compose |
+| `agent.py` | the LangGraph graph: recall → intake → check order → (request refund) → compose → remember |
 | `cases.py` | reading a case and writing the case note (pure functions) |
+| `customer.py` | what the desk knows about a customer, and what it does with it (pure functions) |
+| `memory_client.py` | writing the case to the customer's memory: plain HTTP to the gateway, no key |
+| `seed/` | two synthetic customers (Priya Nair, Marc Dubois) that Vera loads into memory for the demo |
 | `support_client.py` | the call to support-bot: plain HTTP to the gateway, no SDK, no key |
 
 Zip it and submit it as code: `cd examples && zip -r resolution-desk.zip resolution-desk`

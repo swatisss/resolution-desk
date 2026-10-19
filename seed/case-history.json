@@ -1,0 +1,26 @@
+[
+  {
+    "subject": "cust-1042",
+    "key": "case-order-36",
+    "tags": ["refund"],
+    "value": {"order_id": "36", "intent": "refund", "outcome": "refunded", "summary": "Order 36 arrived damaged; refunded in full."}
+  },
+  {
+    "subject": "cust-1042",
+    "key": "case-order-31",
+    "tags": ["refund"],
+    "value": {"order_id": "31", "intent": "refund", "outcome": "refunded", "summary": "Order 31 arrived damaged; refunded in full."}
+  },
+  {
+    "subject": "cust-1042",
+    "key": "case-order-28",
+    "tags": ["status"],
+    "value": {"order_id": "28", "intent": "status", "outcome": "answered", "summary": "Order 28 was late; the customer asked for an ETA."}
+  },
+  {
+    "subject": "cust-2077",
+    "key": "case-order-12",
+    "tags": ["status"],
+    "value": {"order_id": "12", "intent": "status", "outcome": "answered", "summary": "Delivery address changed on order 12 before dispatch."}
+  }
+]

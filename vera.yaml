@@ -14,6 +14,27 @@ capabilities: [case.read, case.resolve]
 calls:
   - agent: support-bot
 
+# Memory (plan v3.24). Vera keeps these records, expires each one after its ttl, scans what goes
+# in and comes out, and audits every use. The desk decides what to remember and how to use it.
+memory:
+  - namespace: customer-profile       # who the customer is; the tenant's CRM writes it
+    scope: subject                    # one customer's records, and nobody else's
+    ttl: 90d
+    access: read
+    preload: true                     # Vera recalls it before the desk runs
+    seed: seed/customer-profile.json  # synthetic customers for the demo
+  - namespace: case-history           # what the desk did for this customer before
+    scope: subject
+    ttl: 30d
+    access: read-write
+    preload: { limit: 5, order: newest }
+    seed: seed/case-history.json
+
+# The customers the Playground offers (synthetic: nothing here is a real person).
+demo_subjects:
+  - { id: cust-1042, name: Priya Nair, description: Gold }
+  - { id: cust-2077, name: Marc Dubois, description: Standard }
+
 # This agent's own guardrails. They tighten the central and tenant rules for this agent only.
 guardrails:
   denied_terms:
@@ -36,3 +57,13 @@ eval:                           # golden cases, run through the gateway at certi
     expect_contains: ["Order 17"]
   - input: "hello"
     expect_contains: ["order number"]
+  - input: "Where is order 42? Customer Priya Nair is asking for an ETA."
+    end_user: cust-1042                 # a returning customer: her memory is built from the fixtures
+    expect_contains: ["Gold tier", "prefers email"]
+    memory:
+      - { namespace: customer-profile, key: profile, value: { name: Priya Nair, tier: Gold, preferred_contact: email } }
+  - input: "Where is order 17? Customer Marc Dubois wants an update."
+    end_user: cust-2077
+    expect_contains: ["Standard tier", "prefers phone"]
+    memory:
+      - { namespace: customer-profile, key: profile, value: { name: Marc Dubois, tier: Standard, preferred_contact: phone } }

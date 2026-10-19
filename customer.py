@@ -59,7 +59,7 @@ def brief_facts(brief: Brief) -> str:
         lines.append(f"Prefers to be contacted by: {brief.contact}")
     if brief.tone:
         lines.append(f"Tone they like: {brief.tone}")
-    lines += [f"Earlier case: {c}" for c in brief.earlier_cases[:3]]
+    lines += [f"Earlier case: {c}" for c in brief.earlier_cases[:5]]
     return "\n".join(lines)
 
 

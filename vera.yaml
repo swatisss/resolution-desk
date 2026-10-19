@@ -29,6 +29,12 @@ memory:
     access: read-write
     preload: { limit: 5, order: newest }
     seed: seed/case-history.json
+  - namespace: conversation           # what was said in this chat, so a follow-up has its context
+    scope: session                    # this chat only; a new conversation starts empty
+    ttl: 1d
+    access: read-write
+    max_value_bytes: 2048
+    preload: { limit: 6, order: newest }
 
 # The customers the Playground offers (synthetic: nothing here is a real person).
 demo_subjects:
@@ -56,7 +62,10 @@ eval:                           # golden cases, run through the gateway at certi
   - input: "Customer Marc Dubois says order 17 arrived damaged and wants his money back."
     expect_contains: ["17"]
   - input: "hello"
-    expect_contains: ["order number"]
+    end_user: cust-1042                 # no order number: a plain reply, greeted by name from memory
+    expect_contains: ["Hi Priya"]
+    memory:
+      - { namespace: customer-profile, key: profile, value: { name: Priya Nair, tier: Gold, preferred_contact: email } }
   - input: "Where is order 42? Customer Priya Nair is asking for an ETA."
     end_user: cust-1042                 # a returning customer: her memory is built from the fixtures
     expect_contains: ["Hi Priya"]     # the greeting is by name, from memory

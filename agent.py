@@ -14,8 +14,8 @@ from typing import Any
 
 import httpx
 from cases import (
+    CHAT_PROMPT,
     DRAFT_PROMPT,
-    NEED_ORDER,
     Case,
     case_note,
     customer_reply,
@@ -73,10 +73,13 @@ def build_graph(gateway: httpx.AsyncClient | None = None, patience_s: float = 30
 
     async def intake(state: DeskState) -> dict[str, Any]:
         case = parse_case(state["messages"][-1].text)
-        update: dict[str, Any] = {"case": case.__dict__}
-        if case.order_id is None:
-            update["messages"] = [AIMessage(greeting(_brief(state)) + NEED_ORDER)]
-        return update
+        return {"case": case.__dict__}
+
+    async def chat(state: DeskState) -> dict[str, Any]:
+        """A message with no order number: a plain model reply, nothing looked up or kept."""
+        text = state["messages"][-1].text
+        draft = await model.ainvoke([SystemMessage(CHAT_PROMPT), HumanMessage(text)])
+        return {"messages": [AIMessage(customer_reply(greeting(_brief(state)), draft.text))]}
 
     async def check_order(state: DeskState) -> dict[str, Any]:
         reply = await support.ask(lookup_request(_case(state)), current_run().traceparent)
@@ -120,7 +123,7 @@ def build_graph(gateway: httpx.AsyncClient | None = None, patience_s: float = 30
         return {}
 
     def after_intake(state: DeskState) -> str:
-        return "check_order" if state["case"]["order_id"] else END
+        return "check_order" if state["case"]["order_id"] else "chat"
 
     def after_lookup(state: DeskState) -> str:
         wants_refund = state["case"]["intent"] == "refund"
@@ -132,13 +135,15 @@ def build_graph(gateway: httpx.AsyncClient | None = None, patience_s: float = 30
     graph.add_node("intake", intake)
     graph.add_node("check_order", check_order)
     graph.add_node("request_refund", request_refund)
+    graph.add_node("chat", chat)
     graph.add_node("compose", compose)
     graph.add_node("remember", remember)
     graph.add_edge(START, "recall")
     graph.add_edge("recall", "intake")
-    graph.add_conditional_edges("intake", after_intake, ["check_order", END])
+    graph.add_conditional_edges("intake", after_intake, ["check_order", "chat"])
     graph.add_conditional_edges("check_order", after_lookup, ["request_refund", "compose"])
     graph.add_edge("request_refund", "compose")
+    graph.add_edge("chat", END)
     graph.add_edge("compose", "remember")
     graph.add_edge("remember", END)
     return graph.compile(checkpointer=InMemorySaver())

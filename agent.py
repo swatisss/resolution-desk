@@ -64,7 +64,7 @@ def build_graph(gateway: httpx.AsyncClient | None = None, patience_s: float = 30
     )
     support = SupportDesk(http, patience_s=patience_s)
     history = CaseHistory(http)
-    model = VeraChatModel(model="claude-haiku-5-5")
+    model = VeraChatModel(model="gpt-4o-mini")
 
     async def recall(state: DeskState) -> dict[str, Any]:
         """What Vera recalled for this customer before the agent ran (nothing for a stranger)."""

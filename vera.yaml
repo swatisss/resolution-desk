@@ -5,7 +5,7 @@ agent_id: resolution-desk
 display_name: Customer Resolution Desk
 harness: langgraph
 entry: agent:build_graph
-models: [claude-haiku-5-5]
+models: [gpt-4o-mini]
 tools: []
 capabilities: [case.read, case.resolve]
 

@@ -18,6 +18,7 @@ from cases import (
     NEED_ORDER,
     Case,
     case_note,
+    customer_reply,
     draft_facts,
     lookup_request,
     parse_case,
@@ -34,6 +35,8 @@ from vera_sdk import VeraChatModel, current_run
 
 
 class DeskState(MessagesState):
+    note: str
+    flag: str | None
     brief: dict[str, Any] | None
     case: dict[str, Any]
     lookup: dict[str, Any]
@@ -90,21 +93,29 @@ def build_graph(gateway: httpx.AsyncClient | None = None, patience_s: float = 30
         brief = _brief(state)
         facts = draft_facts(case, lookup, refund, brief_facts(brief) if brief else None)
         draft = await model.ainvoke([SystemMessage(DRAFT_PROMPT), HumanMessage(facts)])
+        flag = refund_flag(brief, case.intent)
+        # The customer is told only the reply. The case note, with what the desk knows and any
+        # flag, goes to its memory, where the person handling the case reads it.
         note = case_note(
-            case, lookup, refund, draft.text,
-            on_file=on_file(brief) if brief else None,
-            flag=refund_flag(brief, case.intent),
-        )  # fmt: skip
-        return {"messages": [AIMessage(note)]}
+            case, lookup, refund, "", on_file=on_file(brief) if brief else None, flag=flag
+        )
+        reply = customer_reply(greeting(brief), draft.text)
+        return {"messages": [AIMessage(reply)], "note": note, "flag": flag}
 
     async def remember(state: DeskState) -> dict[str, Any]:
         """Keep the case for next time. Without a customer there is nobody to keep it for."""
         ctx = current_run()
         if ctx.run.end_user:
             case = _case(state)
-            lookup = _reply(state["lookup"]).line()
             refund = _reply(state["refund"]).line() if state.get("refund") else None
-            record = case_record(case.order_id or "", case.intent, lookup, refund)
+            record = case_record(
+                case.order_id or "",
+                case.intent,
+                refund,
+                case.ref,
+                state.get("note", ""),
+                state.get("flag"),
+            )
             await history.remember(record, [case.intent], ctx.run.run_id, ctx.traceparent)
         return {}
 

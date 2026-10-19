@@ -80,13 +80,28 @@ def on_file(brief: Brief) -> str:
     return "Customer on file: " + " · ".join(b for b in bits if b)
 
 
-def case_record(order_id: str, intent: str, lookup: str, refund: str | None) -> dict[str, Any]:
-    """What the desk keeps about a case it worked, for the next time."""
+def case_record(
+    order_id: str,
+    intent: str,
+    refund: str | None,
+    case_ref: str = "",
+    note: str = "",
+    flag: str | None = None,
+) -> dict[str, Any]:
+    """What the desk keeps about a case it worked: for the next time, and for the person who
+    reads the case note beside the chat (Vera shows what an agent wrote to its memory)."""
     outcome = "refund requested" if refund else "answered"
     what = "refund" if intent == "refund" else "status question"
-    return {
+    record: dict[str, Any] = {
         "order_id": order_id,
         "intent": intent,
         "outcome": outcome,
         "summary": f"Order {order_id}: {what}; {outcome}.",
     }
+    if case_ref:
+        record["case_ref"] = case_ref
+    if flag:
+        record["flag"] = flag
+    if note:
+        record["note"] = note
+    return record
